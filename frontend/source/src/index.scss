@@ -1,0 +1,35 @@
+// variables
+// ...
+
+// common
+
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background-color: rgb(245, 245, 245);
+}
+
+// sider
+
+.sider-item-logo {
+    text-align: center;
+    font-weight: 800;
+    font-stretch: expanded;
+    cursor: default !important;
+    &:hover {
+        span {
+            color: rgba(255, 255, 255, 0.65);
+        }
+    }
+}
+
+// tables
+
+.editable-row {
+    line-height: 2.5; // has to be quite large due to editable row clipping, adjust if needed
+}

@@ -1,0 +1,116 @@
+version: "3"
+
+networks:
+    public: null
+
+volumes:
+    cravster_db_data:
+        name: "cravster_db_data"
+    cravster_db_log:
+        name: "cravster_db_log"
+    cravster_storage_data:
+        name: "cravster_storage_data"
+
+services:
+    cravster-backend:
+        build:
+            context: backend
+        container_name: cravster-backend
+        depends_on:
+            - cravster-db
+            - cravster-storage-manager
+        environment:
+            MIKRO_ORM_NO_COLOR: true
+            DB_HOST: ${DB_HOST}
+            DB_NAME: ${DB_NAME}
+            DB_PASS: ${DB_PASS}
+            DB_PORT: ${DB_PORT}
+            DB_USER: ${DB_USER}
+            HOST: ${BACKEND_HOST}
+            NEST_DEBUG: ${BACKEND_NEST_DEBUG}
+            NODE_ENV: ${BACKEND_NODE_ENV}
+            NPM_CONFIG_LOGLEVEL: ${BACKEND_NPM_CONFIG_LOGLEVEL}
+            JWT_ACCESS_SECRET: ${BACKEND_JWT_ACCESS_SECRET}
+            JWT_REFRESH_SECRET: ${BACKEND_JWT_REFRESH_SECRET}
+            STORAGE_MANAGER_ENDPOINT: ${STORAGE_MANAGER_ENDPOINT}
+            STORAGE_MANAGER_PORT: ${STORAGE_MANAGER_PORT}
+            STORAGE_MANAGER_USE_SSL: ${STORAGE_MANAGER_USE_SSL}
+            STORAGE_MANAGER_USER: ${STORAGE_MANAGER_USER}
+            STORAGE_MANAGER_PASSWORD: ${STORAGE_MANAGER_PASSWORD}
+        expose:
+            - 3000
+        ports:
+            - 6001:3000
+        networks:
+            - public
+        restart: unless-stopped
+
+    cravster-frontend:
+        build:
+            context: frontend
+            args:
+                REACT_APP_HOST_ENV: ${FRONTEND_REACT_APP_HOST_ENV}
+                NPM_CONFIG_LOGLEVEL: ${FRONTEND_NPM_CONFIG_LOGLEVEL}
+        container_name: cravster-frontend
+        depends_on:
+            - cravster-backend
+            - cravster-storage-public
+        environment:
+            REACT_APP_HOST_ENV: ${FRONTEND_REACT_APP_HOST_ENV}
+            NPM_CONFIG_LOGLEVEL: ${FRONTEND_NPM_CONFIG_LOGLEVEL}
+            WDS_SOCKET_PORT: 0
+        expose:
+            - 80
+        ports:
+            - 6002:80
+        networks:
+            - public
+        restart: unless-stopped
+
+    cravster-db:
+        container_name: cravster-db
+        command: postgres -c log_statement=all
+        environment:
+            POSTGRES_DB: ${DB_NAME}
+            POSTGRES_PASSWORD: ${DB_PASS}
+            POSTGRES_USER: ${DB_USER}
+        expose:
+            - ${DB_PORT}
+        ports:
+            - "6003:${DB_PORT}"
+        image: postgres:13.2
+        networks:
+            - public
+        volumes:
+            - cravster_db_data:/var/lib/postgresql/data
+            - cravster_db_log:/var/log/postgresql
+
+    cravster-storage-manager:
+        container_name: cravster-storage-manager
+        command: minio server --console-address ":9001" /data
+        environment:
+            MINIO_ROOT_USER: "${STORAGE_MANAGER_USER}"
+            MINIO_ROOT_PASSWORD: "${STORAGE_MANAGER_PASSWORD}"
+        image: minio/minio:latest
+        networks:
+            - public
+        ports:
+            - 6004:9000
+            - 6005:9001
+        expose:
+            - 9000
+            - 9001
+        restart: unless-stopped
+        volumes:
+            - cravster_storage_data:/data
+
+    cravster-storage-public:
+        container_name: cravster-storage-public
+        image: nginx:latest
+        networks:
+            - public
+        ports:
+            - 6006:80
+        restart: unless-stopped
+        volumes:
+            - ./storage/public/docker/etc/nginx/conf.d:/etc/nginx/conf.d

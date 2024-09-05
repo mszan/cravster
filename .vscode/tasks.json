@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "tsc check backend",
+            "type": "shell",
+            "command": "docker exec cravster-backend npx tsc -p .",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "tsc check frontend",
+            "type": "shell",
+            "command": "docker exec cravster-frontend npx tsc -p .",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+---
+version: "3"
+networks:
+    public: null
+
+services:
+    cravster-backend:
+        entrypoint:
+            - "/bin/sh"
+            - "-c"
+            - "/opt/scripts/entrypoint.dev.sh"
+        ports:
+            - 7002:9000
+        volumes:
+            - ./backend/source:/opt/source
+            - ./backend/docker/opt/scripts:/opt/scripts
+
+    cravster-frontend:
+        entrypoint:
+            - "/bin/sh"
+            - "-c"
+            - "/opt/scripts/entrypoint.dev.sh"
+        ports:
+            - 7003:3000
+        volumes:
+            - ./frontend/source:/opt/source
+            - ./frontend/docker/opt/scripts:/opt/scripts

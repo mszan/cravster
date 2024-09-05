@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "cravster-backend",
+            "type": "node",
+            "address": "localhost",
+            "port": 7002,
+            "localRoot": "${workspaceFolder}/backend/source/src",
+            "remoteRoot": "/opt/source/src",
+            "request": "attach",
+            "restart": true
+        },
+        {
+            "name": "cravster-frontend (launch)",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:7003",
+            "webRoot": "${workspaceFolder}/frontend/source/src",
+            "sourceMaps": true
+        }
+    ]
+}
