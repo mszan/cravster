@@ -21,7 +21,7 @@ export function RequireAuth({ component, requiredRoles }: Props) {
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
     const [isSiderCollapsed, setSiderCollapsed] = React.useState(false);
 
-    const { user, getUserRoles, logout } = React.useContext(AuthContext);
+    const { user, getUserRoles, getDecodedAccessToken, logout } = React.useContext(AuthContext);
     const { navBarKey } = React.useContext(CurrentPageContext);
 
     const location = useLocation();
@@ -62,7 +62,7 @@ export function RequireAuth({ component, requiredRoles }: Props) {
             onClick: () => navigate("/recipes"),
         },
         {
-            label: "User",
+            label: getDecodedAccessToken()?.user.username,
             key: "user",
             icon: <UserOutlined />,
             style: {

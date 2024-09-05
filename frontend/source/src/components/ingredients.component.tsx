@@ -18,7 +18,6 @@ import {
 import { enqueueSnackbar, useSnackbar } from "notistack";
 import React, { useEffect } from "react";
 import { EditIngredientInput, IngredientCategory, IngredientService, IngredientUnit } from "../client/generated";
-import { AuthContext } from "../context/auth.context";
 import { CurrentPageContext, NavBarKeys } from "../context/current-page.context";
 
 type Props = {};
@@ -285,8 +284,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 
 export const Ingredients: React.FC<Props> = () => {
     const { setTitle, setNavBarKey } = React.useContext(CurrentPageContext);
-    const { getDecodedAccessToken } = React.useContext(AuthContext);
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const { enqueueSnackbar } = useSnackbar();
 
     const [isFetched, setIsFetched] = React.useState<boolean>(true);
     const [ingredients, setIngredients] = React.useState<IngredientDataType[]>([]);
@@ -322,9 +320,62 @@ export const Ingredients: React.FC<Props> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isFetched]);
 
-    const handleDelete = (key: React.Key) => {
-        // const newData = dataSource.filter(item => item.key !== key);
-        // setDataSource(newData);
+    const addIngredient = () => {
+        // const newData: IngredientDataType = {
+        // key: count,
+        // name: `Edward King ${count}`,
+        // age: "32",
+        // address: `London, Park Lane no. ${count}`,
+        // };
+        // setDataSource([...dataSource, newData]);
+        // setCount(count + 1);
+    };
+
+    const deleteIngredient = (id: string) => {
+        IngredientService.ingredientControllerIngredientRemove({ id })
+            .then(() => {
+                const newIngredients = [...ingredients];
+                const oldItemIndex = ingredients.findIndex(item => item.id === id);
+                newIngredients.splice(oldItemIndex, 1);
+                setIngredients(newIngredients);
+            })
+            .catch(err => {
+                enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
+                    variant: "error",
+                    autoHideDuration: 2000,
+                });
+                throw err;
+            })
+            .finally(() => setIsFetched(false));
+    };
+
+    const editIngredient = (input: EditIngredientInput) => {
+        IngredientService.ingredientControllerIngredientEdit({
+            id: input.id,
+            name: input.name,
+            storageAmount: input.storageAmount,
+            shoppingAmount: input.shoppingAmount,
+            unit: input.unit as IngredientUnit,
+            category: input.category as IngredientCategory,
+        })
+            .then(() => {
+                const newIngredients = [...ingredients];
+                const oldItemIndex = ingredients.findIndex(item => item.id === input.id);
+                const oldItem = ingredients[oldItemIndex];
+                newIngredients.splice(oldItemIndex, 1, {
+                    ...oldItem,
+                    ...input,
+                });
+                setIngredients(newIngredients);
+            })
+            .catch(err => {
+                enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
+                    variant: "error",
+                    autoHideDuration: 2000,
+                });
+                throw err;
+            })
+            .finally(() => setIsFetched(false));
     };
 
     const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
@@ -387,7 +438,7 @@ export const Ingredients: React.FC<Props> = () => {
 
                 return (
                     <div style={{ textAlign: "center" }}>
-                        <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
+                        <Popconfirm title="Sure to delete?" onConfirm={() => deleteIngredient(record.id)}>
                             <DeleteFilled style={{ fontSize: 20 }} />
                         </Popconfirm>
                     </div>
@@ -395,46 +446,6 @@ export const Ingredients: React.FC<Props> = () => {
             },
         },
     ];
-
-    const handleAdd = () => {
-        // const newData: IngredientDataType = {
-        // key: count,
-        // name: `Edward King ${count}`,
-        // age: "32",
-        // address: `London, Park Lane no. ${count}`,
-        // };
-        // setDataSource([...dataSource, newData]);
-        // setCount(count + 1);
-    };
-
-    const editIngredient = (input: EditIngredientInput) => {
-        IngredientService.ingredientControllerIngredientEdit({
-            id: input.id,
-            name: input.name,
-            storageAmount: input.storageAmount,
-            shoppingAmount: input.shoppingAmount,
-            unit: input.unit as IngredientUnit,
-            category: input.category as IngredientCategory,
-        })
-            .then(() => {
-                const newIngredients = [...ingredients];
-                const oldItemIndex = ingredients.findIndex(item => item.id === input.id);
-                const oldItem = ingredients[oldItemIndex];
-                newIngredients.splice(oldItemIndex, 1, {
-                    ...oldItem,
-                    ...input,
-                });
-                setIngredients(newIngredients);
-            })
-            .catch(err => {
-                enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
-                    variant: "error",
-                    autoHideDuration: 2000,
-                });
-                throw err;
-            })
-            .finally(() => setIsFetched(false));
-    };
 
     const components = {
         body: {
