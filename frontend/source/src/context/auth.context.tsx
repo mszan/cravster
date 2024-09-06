@@ -1,11 +1,10 @@
+import { notification, Typography } from "antd";
 import jwt_decode from "jwt-decode";
-import { useSnackbar } from "notistack";
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthService, LoginLocalResponse } from "../client/generated";
 import { useLocalStorage } from "../hooks/use-local-storage.hook";
 import { IAccessTokenPayload, IUser, UserRole } from "../types";
-import { Typography } from "antd";
 
 export interface AuthContextInterface {
     user: IUser | null;
@@ -30,16 +29,15 @@ export const AuthContext = React.createContext<AuthContextInterface>(authContext
 export const AuthContextProvider = ({ children }: any) => {
     const navigate = useNavigate();
     const [user, setUser] = useLocalStorage<any>("user", null);
-    const { enqueueSnackbar } = useSnackbar();
 
     const login = async (username: string, password: string): Promise<LoginLocalResponse> => {
         const res = await AuthService.authControllerLogin({
             username: username,
             password: password,
         }).catch(err => {
-            enqueueSnackbar(<Typography.Text>Login failed.</Typography.Text>, {
-                variant: "error",
-                autoHideDuration: 4000,
+            notification.error({
+                message: "Login failed",
+                description: err.message,
             });
             throw err;
         });

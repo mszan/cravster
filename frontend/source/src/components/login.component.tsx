@@ -1,6 +1,5 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Col, Divider, Form, Input, Row, Typography } from "antd";
-import { useSnackbar } from "notistack";
 import React from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth.context";
@@ -14,7 +13,6 @@ type LoginFormFieldType = {
 export const Login: React.FC<Props> = () => {
     let navigate = useNavigate();
     const { login, user } = React.useContext(AuthContext);
-    const { enqueueSnackbar } = useSnackbar();
 
     const [isLoading, setIsLoading] = React.useState(false);
 

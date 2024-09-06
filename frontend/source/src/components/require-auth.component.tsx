@@ -1,6 +1,6 @@
-import { OrderedListOutlined, SettingOutlined, LogoutOutlined, UserOutlined, PieChartOutlined, SnippetsOutlined } from "@ant-design/icons";
+import { LogoutOutlined, OrderedListOutlined, PieChartOutlined, SettingOutlined, SnippetsOutlined, UserOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { Layout, Menu, Typography, theme } from "antd";
+import { Layout, Menu, Typography, notification, theme } from "antd";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useWindowSize } from "usehooks-ts";
@@ -81,6 +81,8 @@ export function RequireAuth({ component, requiredRoles }: Props) {
                     label: "Settings",
                     key: "settings",
                     icon: <SettingOutlined />,
+                    // onClick: () => enqueueSnackbar(...getSnackbarContent("Settings page is not available yet", "info")),
+                    onClick: () => notification.error({ message: "test", description: "test" }),
                 },
             ],
         },

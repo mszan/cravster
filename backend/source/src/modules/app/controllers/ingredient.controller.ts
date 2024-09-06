@@ -26,6 +26,7 @@ import { EditIngredientInput } from "../dto/ingredient/input/edit-ingredient.inp
 import { PaginatedIngredient } from "../dto/paginated-entities";
 import { exceptionDataSet, FileExtensionInvalidException, UniqueConstraintViolationException } from "../errors/errors";
 import { mapEntitiesToPaginatedDto } from "../helpers/map-entities-to-paginated-dto.helper";
+import { User } from "../../../schema/entities/user.entity";
 
 @ApiTags("ingredient")
 @Controller("ingredient")
@@ -89,13 +90,14 @@ export class IngredientController {
     type: FileExtensionInvalidException,
   })
   @Post("")
-  async ingredientAdd(@Body() input: AddIngredientInput): Promise<Ingredient> {
+  async ingredientAdd(@Body() input: AddIngredientInput, @CurrentUser() user: IUser): Promise<Ingredient> {
     const ingredient = new Ingredient();
     ingredient.name = input.name;
     ingredient.category = input.category;
     ingredient.unit = input.unit;
     ingredient.storageAmount = input.storageAmount;
     ingredient.shoppingAmount = input.shoppingAmount;
+    ingredient.user = this.orm.em.getReference(User, user.id);
 
     try {
       await this.orm.em.persistAndFlush(ingredient);

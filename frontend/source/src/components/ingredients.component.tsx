@@ -1,50 +1,34 @@
-import { DeleteFilled, DownOutlined, WarningTwoTone } from "@ant-design/icons";
+import { DeleteFilled, DownOutlined, PlusOutlined, WarningTwoTone } from "@ant-design/icons";
 import {
     Button,
     Col,
     Divider,
+    Drawer,
     Dropdown,
     Form,
     GetRef,
     Input,
     InputNumber,
     InputRef,
+    notification,
     Popconfirm,
     Row,
+    Select,
+    Space,
     Table,
     TableProps,
     Typography,
 } from "antd";
-import { enqueueSnackbar, useSnackbar } from "notistack";
-import React, { useEffect } from "react";
-import { EditIngredientInput, IngredientCategory, IngredientService, IngredientUnit } from "../client/generated";
+import React, { useEffect, useState } from "react";
+import { AddIngredientInput, EditIngredientInput, IngredientCategory, IngredientService, IngredientUnit } from "../client/generated";
 import { CurrentPageContext, NavBarKeys } from "../context/current-page.context";
-
-type Props = {};
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
 type ColumnTypes = Exclude<TableProps["columns"], undefined>;
 
-interface Item {
-    id: string;
-    name: string;
-    storageAmount: number;
-    shoppingAmount: number;
-    category: string;
-    unit: string;
-}
-
 interface EditableRowProps {
     index: number;
-}
-
-interface EditableCellProps {
-    title: React.ReactNode;
-    editable: boolean;
-    dataIndex: keyof Item;
-    record: Item;
-    handleSave: (record: Item) => void;
 }
 
 interface IngredientDataType {
@@ -55,6 +39,26 @@ interface IngredientDataType {
     category: string;
     unit: string;
 }
+
+interface EditableCellProps {
+    title: React.ReactNode;
+    editable: boolean;
+    dataIndex: keyof IngredientDataType;
+    record: IngredientDataType;
+    handleSave: (record: IngredientDataType) => void;
+}
+
+interface AddIngredientDrawerProps {
+    isOpen: boolean;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    ingredients: IngredientDataType[];
+    setIngredients: React.Dispatch<React.SetStateAction<IngredientDataType[]>>;
+    isFetched: boolean;
+    setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const MIN_STORAGE_OR_SHOPPING_AMOUNT = 0;
+const MAX_STORAGE_OR_SHOPPING_AMOUNT = 9999;
 
 const ingredientCategoryItems: { key: IngredientCategory; label: string }[] = [
     {
@@ -224,15 +228,7 @@ const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
     );
 };
 
-const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
-    title,
-    editable,
-    children,
-    dataIndex,
-    record,
-    handleSave,
-    ...restProps
-}) => {
+const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = props => {
     const [editing, setEditing] = React.useState(false);
     const inputRef = React.useRef<InputRef>(null);
     const form = React.useContext(EditableContext)!;
@@ -245,7 +241,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 
     const toggleEdit = () => {
         setEditing(!editing);
-        form.setFieldsValue({ [dataIndex]: record[dataIndex] });
+        form.setFieldsValue({ [props.dataIndex]: props.record[props.dataIndex] });
     };
 
     const save = async () => {
@@ -253,41 +249,169 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
             const values = await form.validateFields();
 
             toggleEdit();
-            handleSave({ ...record, ...values });
+            props.handleSave({ ...props.record, ...values });
         } catch (errInfo) {
-            enqueueSnackbar(<Typography.Text>Save failed</Typography.Text>, { variant: "error", autoHideDuration: 2000 });
-            console.debug("Save failed:", errInfo);
+            notification.error({
+                message: "Save failed",
+                description: errInfo as string,
+            });
         }
     };
 
-    let childNode = children;
+    let childNode = props.children;
 
     let input = <Input ref={inputRef} onPressEnter={save} onBlur={save} />;
-    if (dataIndex === "storageAmount" || dataIndex === "shoppingAmount") {
-        input = <InputNumber ref={inputRef as any} min={0} max={9999} onPressEnter={save} onBlur={save} style={{ width: "100%" }} />;
+    if (props.dataIndex === "storageAmount" || props.dataIndex === "shoppingAmount") {
+        input = (
+            <InputNumber
+                ref={inputRef as any}
+                min={MIN_STORAGE_OR_SHOPPING_AMOUNT}
+                max={MAX_STORAGE_OR_SHOPPING_AMOUNT}
+                onPressEnter={save}
+                onBlur={save}
+                style={{ width: "100%" }}
+            />
+        );
     }
 
-    if (editable) {
+    if (props.editable) {
         childNode = editing ? (
-            <Form.Item style={{ margin: 0 }} name={dataIndex} rules={[{ required: true, message: `${title} is required.` }]}>
+            <Form.Item style={{ margin: 0 }} name={props.dataIndex} rules={[{ required: true, message: `${props.title} is required.` }]}>
                 {input}
             </Form.Item>
         ) : (
             <div className="editable-cell-value-wrap" onClick={toggleEdit}>
-                {children}
+                {props.children}
             </div>
         );
     }
 
-    return <td {...restProps}>{childNode}</td>;
+    return <td>{childNode}</td>;
 };
 
-export const Ingredients: React.FC<Props> = () => {
+const AddIngredientDrawer: React.FC<React.PropsWithChildren<AddIngredientDrawerProps>> = props => {
+    const [form] = Form.useForm();
+
+    const addIngredient = (input: AddIngredientInput) => {
+        IngredientService.ingredientControllerIngredientAdd(input)
+            .then(res => {
+                props.setIngredients([...props.ingredients, res]);
+            })
+            .catch(err => {
+                notification.error({
+                    message: "Failed to add ingredient",
+                    description: err.message,
+                });
+                throw err;
+            })
+            .finally(() => {
+                props.setIsOpen(false);
+                props.setIsFetched(false);
+            });
+    };
+
+    const handleSubmitClick = () => {
+        form.submit();
+    };
+
+    return (
+        <>
+            <Drawer
+                title="Add new ingredient"
+                width={720}
+                onClose={() => props.setIsOpen(false)}
+                open={props.isOpen}
+                styles={{
+                    body: {
+                        paddingBottom: 80,
+                    },
+                }}
+                extra={
+                    <Space>
+                        <Button onClick={() => props.setIsOpen(false)}>Cancel</Button>
+                        <Button block type="primary" onClick={handleSubmitClick}>
+                            Submit
+                        </Button>
+                    </Space>
+                }
+            >
+                <Form layout="vertical" form={form} onFinish={addIngredient}>
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <Form.Item name="name" label="Name" rules={[{ required: true, message: "Please enter ingredient name" }]}>
+                                <Input placeholder="strawberries" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="storageAmount"
+                                label="Storage amount"
+                                rules={[{ required: true, message: "Please select a storage amount" }]}
+                            >
+                                <InputNumber
+                                    min={MIN_STORAGE_OR_SHOPPING_AMOUNT}
+                                    max={MAX_STORAGE_OR_SHOPPING_AMOUNT}
+                                    placeholder="5"
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="shoppingAmount"
+                                label="Shopping amount"
+                                rules={[{ required: true, message: "Please select a shopping amount" }]}
+                            >
+                                <InputNumber
+                                    min={MIN_STORAGE_OR_SHOPPING_AMOUNT}
+                                    max={MAX_STORAGE_OR_SHOPPING_AMOUNT}
+                                    placeholder="5"
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item name="category" label="Category" rules={[{ required: true, message: "Please select a category" }]}>
+                                <Select
+                                    placeholder={ingredientCategoryItems.find(x => x.key === IngredientCategory.FRUITS_VEGETABLES)?.label}
+                                >
+                                    {ingredientCategoryItems.map(item => (
+                                        <Select.Option key={item.key} value={item.key}>
+                                            {item.label}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item name="unit" label="Unit" rules={[{ required: true, message: "Please select a unit" }]}>
+                                <Select placeholder={ingredientUnitItems.find(x => x.key === IngredientUnit.PIECE)?.label}>
+                                    {ingredientUnitItems.map(item => (
+                                        <Select.Option key={item.key} value={item.key}>
+                                            {item.label}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </Form>
+            </Drawer>
+        </>
+    );
+};
+
+export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
     const { setTitle, setNavBarKey } = React.useContext(CurrentPageContext);
-    const { enqueueSnackbar } = useSnackbar();
 
     const [isFetched, setIsFetched] = React.useState<boolean>(true);
     const [ingredients, setIngredients] = React.useState<IngredientDataType[]>([]);
+
+    const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
 
     useEffect(() => {
         setTitle("ingredients");
@@ -308,28 +432,19 @@ export const Ingredients: React.FC<Props> = () => {
                     );
                 })
                 .catch(err => {
-                    enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
-                        variant: "error",
-                        autoHideDuration: 2000,
+                    notification.error({
+                        message: "Failed to fetch ingredients",
+                        description: err.message,
                     });
                     throw err;
                 })
-                .finally(() => setIsFetched(false));
+                .finally(() => {
+                    setIsFetched(false);
+                });
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isFetched]);
-
-    const addIngredient = () => {
-        // const newData: IngredientDataType = {
-        // key: count,
-        // name: `Edward King ${count}`,
-        // age: "32",
-        // address: `London, Park Lane no. ${count}`,
-        // };
-        // setDataSource([...dataSource, newData]);
-        // setCount(count + 1);
-    };
 
     const deleteIngredient = (id: string) => {
         IngredientService.ingredientControllerIngredientRemove({ id })
@@ -340,9 +455,9 @@ export const Ingredients: React.FC<Props> = () => {
                 setIngredients(newIngredients);
             })
             .catch(err => {
-                enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
-                    variant: "error",
-                    autoHideDuration: 2000,
+                notification.error({
+                    message: "Delete failed",
+                    description: err.message,
                 });
                 throw err;
             })
@@ -369,9 +484,9 @@ export const Ingredients: React.FC<Props> = () => {
                 setIngredients(newIngredients);
             })
             .catch(err => {
-                enqueueSnackbar(<Typography.Text>{err.message}</Typography.Text>, {
-                    variant: "error",
-                    autoHideDuration: 2000,
+                notification.error({
+                    message: "Edit failed",
+                    description: err.message,
                 });
                 throw err;
             })
@@ -432,7 +547,7 @@ export const Ingredients: React.FC<Props> = () => {
             dataIndex: "operation",
             width: "5%",
             render: (_, record) => {
-                if (ingredients.length == 0) {
+                if (ingredients.length === 0) {
                     return null;
                 }
 
@@ -492,13 +607,23 @@ export const Ingredients: React.FC<Props> = () => {
             </Row>
             <Row>
                 <Col span={24} style={{ textAlign: "right" }}>
-                    <Button type="primary" style={{ marginBottom: 18 }}>
+                    <Button
+                        type="primary"
+                        style={{ marginBottom: 18 }}
+                        onClick={() => setIsAddDrawerOpen(true)}
+                        icon={<PlusOutlined />}
+                        iconPosition="end"
+                    >
                         Add ingredient
                     </Button>
                 </Col>
                 <Col span={24}>
                     <Table
-                        pagination={{ pageSize: 12 }}
+                        pagination={{
+                            pageSize: 12,
+                            showSizeChanger: false,
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                        }}
                         components={components}
                         rowClassName={() => "editable-row"}
                         loading={isFetched}
@@ -509,6 +634,14 @@ export const Ingredients: React.FC<Props> = () => {
                     />
                 </Col>
             </Row>
+            <AddIngredientDrawer
+                isOpen={isAddDrawerOpen}
+                setIsOpen={setIsAddDrawerOpen}
+                ingredients={ingredients}
+                setIngredients={setIngredients}
+                isFetched={isFetched}
+                setIsFetched={setIsFetched}
+            />
         </React.Fragment>
     );
 };
