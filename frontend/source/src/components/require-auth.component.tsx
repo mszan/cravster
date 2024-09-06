@@ -148,34 +148,8 @@ export function RequireAuth({ component, requiredRoles }: Props) {
                         {isLoading ? <Typography>Loading...</Typography> : component}
                     </div>
                 </Layout.Content>
-                <Layout.Footer style={{ textAlign: "center" }}>Dawid Mszanowski ©{new Date().getFullYear()}</Layout.Footer>
+                <Layout.Footer style={{ textAlign: "end", paddingRight: 20 }}>Dawid Mszanowski ©{new Date().getFullYear()}</Layout.Footer>
             </Layout>
         </Layout>
-
-        // <Layout style={{ minHeight: "100vh" }}>
-        //     <Layout.Sider collapsible collapsed={isSiderCollapsed} onCollapse={value => setSiderCollapsed(value)}>
-        //         <Menu theme="dark" selectedKeys={navBarKey ? [navBarKey] : undefined} mode="inline" items={items} />
-        //     </Layout.Sider>
-        //     <Layout>
-        //         <Layout.Content style={{ margin: "0 16px" }}>
-        //             <Breadcrumb style={{ margin: "16px 0" }}>
-        //                 <Breadcrumb.Item>this</Breadcrumb.Item>
-        //                 <Breadcrumb.Item>will</Breadcrumb.Item>
-        //                 <Breadcrumb.Item>be</Breadcrumb.Item>
-        //                 <Breadcrumb.Item>updated</Breadcrumb.Item>
-        //             </Breadcrumb>
-        //             <div
-        //                 style={{
-        //                     padding: 24,
-        //                     background: colorBgContainer,
-        //                     borderRadius: borderRadiusLG,
-        //                 }}
-        //             >
-        //                 {isLoading ? <Typography>Loading...</Typography> : component}
-        //             </div>
-        //         </Layout.Content>
-        //         <Layout.Footer style={{ textAlign: "center" }}>Dawid Mszanowski ©{new Date().getFullYear()}</Layout.Footer>
-        //     </Layout>
-        // </Layout>
     );
 }
