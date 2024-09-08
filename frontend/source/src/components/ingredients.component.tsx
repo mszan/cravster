@@ -25,7 +25,6 @@ import React, { useEffect, useState } from "react";
 import Highlighter from "react-highlight-words";
 import { AddIngredientInput, EditIngredientInput, IngredientCategory, IngredientService, IngredientUnit } from "../client/generated";
 import { CurrentPageContext, NavBarKeys } from "../context/current-page.context";
-import { configInstance } from "../config";
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
