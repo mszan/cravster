@@ -733,7 +733,6 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                                     const shoppingList = await getShoppingList();
 
                                     try {
-                                        console.log(window.isSecureContext);
                                         navigator.clipboard.writeText(shoppingList);
                                         notification.success({
                                             message: "Shopping list copied",
