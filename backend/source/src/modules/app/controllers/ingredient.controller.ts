@@ -13,8 +13,8 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { IngredientEntity } from "../../../schema/entities/ingredient.entity";
+import { ApiOperation, ApiProduces, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { IngredientCategory, IngredientEntity } from "../../../schema/entities/ingredient.entity";
 import { IUser } from "../../../schema/interfaces/jwt";
 import { UserRole } from "../../../schema/interfaces/user-role";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
@@ -72,6 +72,38 @@ export class IngredientController {
     const ingredientsTotal = await qb.count();
 
     return mapEntitiesToPaginatedDto(ingredients, offset, limit, ingredientsTotal);
+  }
+
+  @ApiOperation({ summary: "Get shopping list" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: String,
+  })
+  @ApiProduces("text/plain")
+  @Get("shopping-list")
+  async ingredientShoppingList(@CurrentUser() user: IUser): Promise<string> {
+    const ingredients = await this.orm.em.find<IngredientEntity>(
+      IngredientEntity,
+      { user: { id: user.id }, shoppingAmount: { $gt: 0 } },
+      {
+        orderBy: { name: "ASC" },
+      },
+    );
+
+    let shoppingList = "";
+    Object.keys(IngredientCategory)
+      .sort()
+      .forEach(category => {
+        const ingredientsInCategory = ingredients.filter(ingredient => ingredient.category === category);
+        if (ingredientsInCategory.length > 0) {
+          shoppingList += `\n${category}:\n`;
+          ingredientsInCategory.forEach(ingredient => {
+            shoppingList += `\t${ingredient.name} - ${ingredient.shoppingAmount} ${ingredient.unit.toLowerCase()}\n`;
+          });
+        }
+      });
+
+    return shoppingList;
   }
 
   @ApiOperation({

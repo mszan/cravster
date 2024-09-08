@@ -1,4 +1,4 @@
-import { DeleteFilled, DownOutlined, PlusOutlined, WarningTwoTone } from "@ant-design/icons";
+import { DeleteFilled, DownOutlined, PlusOutlined, SearchOutlined, ShoppingCartOutlined, WarningTwoTone } from "@ant-design/icons";
 import {
     Button,
     Col,
@@ -16,20 +16,24 @@ import {
     Select,
     Space,
     Table,
+    TableColumnType,
     TableProps,
     Typography,
 } from "antd";
+import { FilterDropdownProps } from "antd/es/table/interface";
 import React, { useEffect, useState } from "react";
+import Highlighter from "react-highlight-words";
 import { AddIngredientInput, EditIngredientInput, IngredientCategory, IngredientService, IngredientUnit } from "../client/generated";
 import { CurrentPageContext, NavBarKeys } from "../context/current-page.context";
+import { configInstance } from "../config";
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
-type ColumnTypes = Exclude<TableProps["columns"], undefined>;
+type OnTableChange = NonNullable<TableProps<IngredientDataType>["onChange"]>;
+type Filters = Parameters<OnTableChange>[1];
 
-interface EditableRowProps {
-    index: number;
-}
+type GetSingle<T> = T extends (infer U)[] ? U : never;
+type Sorts = GetSingle<Parameters<OnTableChange>[2]>;
 
 interface IngredientDataType {
     id: string;
@@ -38,6 +42,10 @@ interface IngredientDataType {
     shoppingAmount: number;
     category: string;
     unit: string;
+}
+
+interface EditableRowProps {
+    index: number;
 }
 
 interface EditableCellProps {
@@ -175,7 +183,7 @@ const renderDropdown = (
                 onClick: info => {
                     editIngredients({
                         id: ingredientId,
-                        [dropdownType]: info.key,
+                        [dropdownType]: dropdownType === "category" ? (info.key as IngredientCategory) : (info.key as IngredientUnit),
                     });
                 },
             }}
@@ -408,16 +416,26 @@ const AddIngredientDrawer: React.FC<React.PropsWithChildren<AddIngredientDrawerP
 export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
     const { setTitle, setNavBarKey } = React.useContext(CurrentPageContext);
 
-    const [isFetched, setIsFetched] = React.useState<boolean>(true);
+    const [isIngredientsListFetched, setIsIngredientsListFetched] = React.useState<boolean>(true);
     const [ingredients, setIngredients] = React.useState<IngredientDataType[]>([]);
 
+    const [isShoppingListFetched, setIsShoppingListFetched] = React.useState<boolean>(true);
+
     const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
+
+    const [searchText, setSearchText] = useState("");
+    const [searchedColumn, setSearchedColumn] = useState<keyof IngredientDataType>();
+
+    const [, setFilteredInfo] = useState<Filters>({});
+    const [, setSortedInfo] = useState<Sorts>({});
+
+    const searchInput = React.useRef<InputRef>(null);
 
     useEffect(() => {
         setTitle("ingredients");
         setNavBarKey(NavBarKeys.INGREDIENTS);
 
-        if (isFetched) {
+        if (isIngredientsListFetched) {
             IngredientService.ingredientControllerIngredientList(0, 100)
                 .then(res => {
                     setIngredients(
@@ -439,12 +457,110 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                     throw err;
                 })
                 .finally(() => {
-                    setIsFetched(false);
+                    setIsIngredientsListFetched(false);
                 });
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isFetched]);
+    }, [isIngredientsListFetched]);
+
+    const handleSearch = (selectedKeys: string[], confirm: FilterDropdownProps["confirm"], dataIndex: keyof IngredientDataType) => {
+        confirm();
+        setSearchText(selectedKeys[0]);
+        setSearchedColumn(dataIndex);
+    };
+
+    const handleReset = (clearFilters: () => void) => {
+        clearFilters();
+        setSearchText("");
+    };
+
+    const handleTableChange: OnTableChange = (pagination, filters, sorter) => {
+        console.log("Various parameters", pagination, filters, sorter);
+        setFilteredInfo(filters);
+        setSortedInfo(sorter as Sorts);
+    };
+
+    const getColumnSearchProps = (dataIndex: keyof IngredientDataType): TableColumnType<IngredientDataType> => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+            <div style={{ padding: 8 }} onKeyDown={e => e.stopPropagation()}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                    style={{ marginBottom: 8, display: "block" }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Search
+                    </Button>
+                    <Button onClick={() => clearFilters && handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+                        Reset
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            confirm({ closeDropdown: false });
+                            setSearchText((selectedKeys as string[])[0]);
+                            setSearchedColumn(dataIndex);
+                        }}
+                    >
+                        Filter
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            close();
+                        }}
+                    >
+                        close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />,
+        onFilter: (value, record) =>
+            record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase()),
+        onFilterDropdownOpenChange: visible => {
+            if (visible) {
+                setTimeout(() => searchInput.current?.select(), 100);
+            }
+        },
+        render: text =>
+            searchedColumn && searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+                    searchWords={[searchText]}
+                    autoEscape
+                    textToHighlight={text ? text.toString() : ""}
+                />
+            ) : (
+                text
+            ),
+    });
+
+    const getEditableProps = (title: string, dataIndex: string): TableColumnType<IngredientDataType> => ({
+        onCell: (record: IngredientDataType) => ({
+            record,
+            editable: true,
+            dataIndex,
+            title,
+            handleSave: editIngredient,
+        }),
+    });
 
     const deleteIngredient = (id: string) => {
         IngredientService.ingredientControllerIngredientRemove({ id })
@@ -461,7 +577,7 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                 });
                 throw err;
             })
-            .finally(() => setIsFetched(false));
+            .finally(() => setIsIngredientsListFetched(false));
     };
 
     const editIngredient = (input: EditIngredientInput) => {
@@ -490,57 +606,75 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                 });
                 throw err;
             })
-            .finally(() => setIsFetched(false));
+            .finally(() => setIsIngredientsListFetched(false));
     };
 
-    const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
+    const getShoppingList = async () => {
+        setIsShoppingListFetched(false);
+        return IngredientService.ingredientControllerIngredientShoppingList()
+            .then(res => res)
+            .catch(err => {
+                notification.error({
+                    message: "Failed to fetch shopping list",
+                    description: err.message,
+                });
+                throw err;
+            })
+            .finally(() => {
+                setIsIngredientsListFetched(true);
+            });
+    };
+
+    const columns: (TableColumnType<IngredientDataType> & { editable?: boolean })[] = [
         {
             title: "Name",
             dataIndex: "name",
             width: "25%",
-            editable: true,
+            sorter: {
+                compare: (a, b) => a.name.localeCompare(b.name),
+                multiple: 1,
+            },
+            ...getEditableProps("Name", "name"),
+            ...getColumnSearchProps("name"),
         },
         {
             title: "Storage amount",
             dataIndex: "storageAmount",
             width: "15%",
-            editable: true,
+            sorter: {
+                compare: (a, b) => a.storageAmount - b.storageAmount,
+                multiple: 2,
+            },
+            ...getEditableProps("Storage amount", "storageAmount"),
             render: value => renderStorageAmount(value),
         },
         {
             title: "Shopping amount",
             dataIndex: "shoppingAmount",
             width: "15%",
-            editable: true,
+            ...getEditableProps("Shopping amount", "shoppingAmount"),
+            sorter: {
+                compare: (a, b) => a.storageAmount - b.storageAmount,
+                multiple: 2,
+            },
         },
         {
             title: "Category",
             dataIndex: "category",
             width: "20%",
             render: (value, record) => renderDropdown(value, record.id, "category", editIngredient),
-            // filters: [
-            //     {
-            //         text: "Joe",
-            //         value: "Joe",
-            //     },
-            //     {
-            //         text: "Category 1",
-            //         value: "Category 1",
-            //     },
-            //     {
-            //         text: "Category 2",
-            //         value: "Category 2",
-            //     },
-            // ],
-            // filterMode: "tree",
-            // filterSearch: true,
-            // onFilter: (value, record) => record.name.startsWith(value as string),
+            filters: ingredientCategoryItems.map(item => ({ text: item.label, value: item.key })),
+            filterSearch: true,
+            onFilter: (value, record) => record.category === value,
         },
         {
             title: "Unit",
             dataIndex: "unit",
             width: "20%",
             render: (value, record) => renderDropdown(value, record.id, "unit", editIngredient),
+            filters: ingredientUnitItems.map(item => ({ text: item.label, value: item.key })),
+            filterSearch: true,
+            onFilter: (value, record) => record.unit === value,
         },
         {
             title: "",
@@ -554,7 +688,7 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                 return (
                     <div style={{ textAlign: "center" }}>
                         <Popconfirm title="Sure to delete?" onConfirm={() => deleteIngredient(record.id)}>
-                            <DeleteFilled style={{ fontSize: 20 }} />
+                            <Button block icon={<DeleteFilled style={{ fontSize: 20 }} />} type="text"></Button>
                         </Popconfirm>
                     </div>
                 );
@@ -568,23 +702,6 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
             cell: EditableCell,
         },
     };
-
-    const columns = defaultColumns.map(col => {
-        if (!col.editable) {
-            return col;
-        }
-        return {
-            key: col.dataIndex,
-            ...col,
-            onCell: (record: IngredientDataType) => ({
-                record,
-                editable: col.editable,
-                dataIndex: col.dataIndex,
-                title: col.title,
-                handleSave: editIngredient,
-            }),
-        };
-    });
 
     return (
         <React.Fragment>
@@ -607,16 +724,40 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                 </Col>
             </Row>
             <Row>
-                <Col span={24} style={{ textAlign: "right" }}>
-                    <Button
-                        type="primary"
-                        style={{ marginBottom: 18 }}
-                        onClick={() => setIsAddDrawerOpen(true)}
-                        icon={<PlusOutlined />}
-                        iconPosition="end"
-                    >
-                        Add ingredient
-                    </Button>
+                <Col span={24}>
+                    <Row justify="end" gutter={8} style={{ marginBottom: 18 }}>
+                        <Col>
+                            <Button
+                                type="default"
+                                onClick={async () => {
+                                    const shoppingList = await getShoppingList();
+
+                                    try {
+                                        console.log(window.isSecureContext);
+                                        navigator.clipboard.writeText(shoppingList);
+                                        notification.success({
+                                            message: "Shopping list copied",
+                                            description: "Shopping list copied to clipboard",
+                                        });
+                                    } catch (err) {
+                                        notification.error({
+                                            message: "Failed to copy shopping list into clipboard",
+                                            description: (err as any).message,
+                                        });
+                                    }
+                                }}
+                                icon={<ShoppingCartOutlined />}
+                                iconPosition="end"
+                            >
+                                Copy shopping list to clipboard
+                            </Button>
+                        </Col>
+                        <Col>
+                            <Button type="primary" onClick={() => setIsAddDrawerOpen(true)} icon={<PlusOutlined />} iconPosition="end">
+                                Add ingredient
+                            </Button>
+                        </Col>
+                    </Row>
                 </Col>
                 <Col span={24}>
                     <Table
@@ -627,11 +768,12 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                         }}
                         components={components}
                         rowClassName={() => "editable-row"}
-                        loading={isFetched}
+                        loading={isIngredientsListFetched}
                         bordered
                         size="large"
                         dataSource={ingredients}
-                        columns={columns as ColumnTypes}
+                        columns={columns}
+                        onChange={handleTableChange}
                     />
                 </Col>
             </Row>
@@ -640,8 +782,8 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
                 setIsOpen={setIsAddDrawerOpen}
                 ingredients={ingredients}
                 setIngredients={setIngredients}
-                isFetched={isFetched}
-                setIsFetched={setIsFetched}
+                isFetched={isIngredientsListFetched}
+                setIsFetched={setIsIngredientsListFetched}
             />
         </React.Fragment>
     );

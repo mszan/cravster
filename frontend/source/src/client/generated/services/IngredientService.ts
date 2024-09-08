@@ -87,6 +87,18 @@ export class IngredientService {
     }
 
     /**
+     * Get shopping list
+     * @returns string
+     * @throws ApiError
+     */
+    public static ingredientControllerIngredientShoppingList(): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/ingredient/shopping-list',
+        });
+    }
+
+    /**
      * Get ingredient details
      * @param id
      * @returns IngredientEntity
