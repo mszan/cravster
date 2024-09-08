@@ -1,10 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IPaginatedType, PageInfo, Paginated } from "./pagination";
-import { Recipe } from "../../../schema/entities/recipe.entity";
-import { Ingredient } from "../../../schema/entities/ingredient.entity";
+import { RecipeEntity } from "../../../schema/entities/recipe.entity";
+import { IngredientEntity } from "../../../schema/entities/ingredient.entity";
+import { RecipeInList } from "./recipe/recipe-in-list";
 
-export class PaginatedRecipe extends Paginated(Recipe) {}
-export class PaginatedIngredient extends Paginated(Ingredient) {}
+export class PaginatedRecipeEntity extends Paginated(RecipeEntity) {} // todo: replace with public class
+export class PaginatedIngredientEntity extends Paginated(IngredientEntity) {} // todo: replace with public class
+
+export class PaginatedRecipeInList extends Paginated(RecipeInList) {}
 
 export class PaginatedEntity<T> implements IPaginatedType<T> {
   @ApiProperty({ type: PageInfo })

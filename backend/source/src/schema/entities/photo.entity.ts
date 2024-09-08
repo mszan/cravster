@@ -1,13 +1,13 @@
 import { Entity, ManyToOne, OneToOne, Property } from "@mikro-orm/core";
 import { ApiProperty } from "@nestjs/swagger";
-import { Base } from "./base.entity";
-import { Recipe } from "./recipe.entity";
-import { User } from "./user.entity";
+import { BaseEntity } from "./base.entity";
+import { RecipeEntity } from "./recipe.entity";
+import { UserEntity } from "./user.entity";
 
 @Entity()
-export class Photo extends Base {
-  @ManyToOne({ entity: () => User, nullable: false })
-  user!: User;
+export class PhotoEntity extends BaseEntity {
+  @ManyToOne({ entity: () => UserEntity, nullable: false })
+  user!: UserEntity;
 
   @ApiProperty({ nullable: false })
   @Property({ nullable: false })
@@ -17,7 +17,7 @@ export class Photo extends Base {
   @Property({ nullable: false })
   filename!: string;
 
-  @ApiProperty({ type: () => Recipe, nullable: true })
-  @OneToOne(() => Recipe, recipe => recipe.photo, { owner: true, nullable: true })
-  recipe?: Recipe;
+  @ApiProperty({ type: () => RecipeEntity, nullable: true })
+  @OneToOne(() => RecipeEntity, recipe => recipe.photo, { owner: true, nullable: true })
+  recipe?: RecipeEntity;
 }

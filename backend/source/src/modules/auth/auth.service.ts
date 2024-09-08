@@ -2,7 +2,7 @@ import { MikroORM } from "@mikro-orm/core";
 import { ForbiddenException, Inject, Injectable, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import bcrypt from "bcrypt";
-import { User } from "../../schema/entities/user.entity";
+import { UserEntity } from "../../schema/entities/user.entity";
 import { IAccessTokenPayload, IRefreshTokenPayload } from "../../schema/interfaces/jwt";
 import { configInstance } from "../app/app.config";
 import { ORM } from "../orm/orm.module";
@@ -17,13 +17,13 @@ export class AuthService {
   public async validateUserPassword(
     username: string,
     password: string,
-  ): Promise<Pick<User, "username" | "roles"> | null> {
-    const user = await this.orm.em.findOneOrFail(User, { username });
+  ): Promise<Pick<UserEntity, "username" | "roles"> | null> {
+    const user = await this.orm.em.findOneOrFail(UserEntity, { username });
 
     // Check if user password is correct.
     if (await bcrypt.compare(password, user.password)) {
       // Create JWT payload object.
-      const payloadUser: Pick<User, "username" | "roles"> = {
+      const payloadUser: Pick<UserEntity, "username" | "roles"> = {
         username: user.username,
         roles: user.roles,
       };
@@ -32,7 +32,7 @@ export class AuthService {
     return null;
   }
 
-  async getTokens(user: User) {
+  async getTokens(user: UserEntity) {
     return {
       accessToken: await this.jwtService.signAsync(
         {
@@ -63,7 +63,7 @@ export class AuthService {
   }
 
   async refreshTokens(userId: string, refreshToken: string) {
-    const userEntity = await this.orm.em.findOne(User, { id: userId });
+    const userEntity = await this.orm.em.findOne(UserEntity, { id: userId });
 
     if (!userEntity) {
       this.logger.debug("User not found in the database.");
@@ -88,7 +88,7 @@ export class AuthService {
       hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
     }
 
-    const userEntity = await this.orm.em.findOneOrFail(User, { id: userId });
+    const userEntity = await this.orm.em.findOneOrFail(UserEntity, { id: userId });
     userEntity.refreshToken = hashedRefreshToken;
     await this.orm.em.persistAndFlush(userEntity);
   }

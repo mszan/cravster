@@ -2,6 +2,7 @@ import { Options } from "@mikro-orm/core";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { Logger } from "@nestjs/common";
 import { configInstance, NodeEnv } from "../app/app.config";
+import { PostgreSqlDriver } from "@mikro-orm/postgresql";
 
 const entitiesPath = "/opt/source/dist/src/schema/entities/**/*.js";
 const entitiesTsPath = __dirname + "/../../schema/entities/**/*.ts";
@@ -17,7 +18,7 @@ export default {
   dbName: configInstance.database.database,
   host: configInstance.database.host,
   port: Number(configInstance.database.port),
-  type: "postgresql",
+  driver: PostgreSqlDriver,
 
   // Enable debug for every environment but production.
   debug: configInstance.app.environment != NodeEnv.PRODUCTION,

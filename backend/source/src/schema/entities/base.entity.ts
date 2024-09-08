@@ -6,7 +6,7 @@ export interface BaseInterface {
 }
 
 @Entity({ abstract: true })
-export abstract class Base implements BaseInterface {
+export abstract class BaseEntity implements BaseInterface {
   @ApiProperty({
     nullable: false,
   })

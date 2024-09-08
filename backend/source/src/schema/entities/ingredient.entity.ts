@@ -1,7 +1,8 @@
-import { Entity, Enum, ManyToOne, Property } from "@mikro-orm/core";
+import { Collection, Entity, Enum, ManyToOne, OneToMany, Property } from "@mikro-orm/core";
 import { ApiProperty } from "@nestjs/swagger";
-import { Base } from "./base.entity";
-import { User } from "./user.entity";
+import { BaseEntity } from "./base.entity";
+import { UserEntity } from "./user.entity";
+import { RecipeIngredientEntity } from "./recipe-ingredient.entity";
 
 export enum IngredientCategory {
   ALCOHOL = "ALCOHOL",
@@ -30,9 +31,17 @@ export enum IngredientUnit {
 }
 
 @Entity()
-export class Ingredient extends Base {
-  @ManyToOne({ entity: () => User, nullable: false })
-  user!: User;
+export class IngredientEntity extends BaseEntity {
+  @ApiProperty({ nullable: false, type: () => UserEntity })
+  @ManyToOne({ entity: () => UserEntity, nullable: false })
+  user!: UserEntity;
+
+  @ApiProperty({ nullable: false, type: () => RecipeIngredientEntity, isArray: true })
+  @OneToMany({
+    entity: () => RecipeIngredientEntity,
+    mappedBy: "ingredient",
+  })
+  recipeIngredients = new Collection<RecipeIngredientEntity>(this);
 
   @ApiProperty({ maxLength: 255, nullable: false })
   @Property({ length: 255, nullable: false })

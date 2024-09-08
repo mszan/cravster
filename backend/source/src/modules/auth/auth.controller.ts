@@ -1,7 +1,7 @@
 import { MikroORM } from "@mikro-orm/core";
 import { Controller, ForbiddenException, Inject, Post, Request, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiForbiddenResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { User } from "../../schema/entities/user.entity";
+import { UserEntity } from "../../schema/entities/user.entity";
 import { IRefreshTokenStrategyUserObject, IUser } from "../../schema/interfaces/jwt";
 import { ORM } from "../orm/orm.module";
 import { AuthService } from "./auth.service";
@@ -29,7 +29,7 @@ export class AuthController {
   @Post("login")
   async login(@Request() req: Request & { user?: IUser }): Promise<LoginLocalResponse> {
     // password validation is done in LocalStrategy so at this point we are sure user password is correct
-    const userEntity = await this.orm.em.findOne(User, { username: req.user?.username }); // todo: rm "?"
+    const userEntity = await this.orm.em.findOne(UserEntity, { username: req.user?.username }); // todo: rm "?"
 
     if (!userEntity) {
       throw new ForbiddenException();

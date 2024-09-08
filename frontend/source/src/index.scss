@@ -33,3 +33,24 @@ body {
 .editable-row {
     line-height: 2.5; // has to be quite large due to editable row clipping, adjust if needed
 }
+
+// recipes page
+
+.recipes-list {
+    .ant-list-item {
+        transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+        .item-actions {
+            opacity: 0;
+            transition: opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+
+            .item-actions {
+                opacity: 1;
+            }
+        }
+    }
+}

@@ -1,13 +1,13 @@
 import { Collection, Entity, Enum, Property, OneToMany } from "@mikro-orm/core";
 import { ApiProperty } from "@nestjs/swagger";
 import { UserRole } from "../interfaces/user-role";
-import { Base } from "./base.entity";
-import { Ingredient } from "./ingredient.entity";
-import { Photo } from "./photo.entity";
-import { Recipe } from "./recipe.entity";
+import { BaseEntity } from "./base.entity";
+import { IngredientEntity } from "./ingredient.entity";
+import { PhotoEntity } from "./photo.entity";
+import { RecipeEntity } from "./recipe.entity";
 
 @Entity()
-export class User extends Base {
+export class UserEntity extends BaseEntity {
   @ApiProperty({ maxLength: 255, nullable: false })
   @Property({ length: 255, nullable: false, unique: true })
   username!: string;
@@ -22,12 +22,12 @@ export class User extends Base {
   @Property({ nullable: true, hidden: true })
   refreshToken: string | null;
 
-  @OneToMany({ entity: () => Ingredient, mappedBy: ingredient => ingredient.user, orphanRemoval: true })
-  ingredients = new Collection<Ingredient>(this);
+  @OneToMany({ entity: () => IngredientEntity, mappedBy: ingredient => ingredient.user, orphanRemoval: true })
+  ingredients = new Collection<IngredientEntity>(this);
 
-  @OneToMany({ entity: () => Photo, mappedBy: photo => photo.user, orphanRemoval: true })
-  photos = new Collection<Photo>(this);
+  @OneToMany({ entity: () => PhotoEntity, mappedBy: photo => photo.user, orphanRemoval: true })
+  photos = new Collection<PhotoEntity>(this);
 
-  @OneToMany({ entity: () => Recipe, mappedBy: recipe => recipe.user, orphanRemoval: true })
-  recipes = new Collection<Recipe>(this);
+  @OneToMany({ entity: () => RecipeEntity, mappedBy: recipe => recipe.user, orphanRemoval: true })
+  recipes = new Collection<RecipeEntity>(this);
 }

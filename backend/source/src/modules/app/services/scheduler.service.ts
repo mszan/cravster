@@ -2,7 +2,7 @@ import { MikroORM } from "@mikro-orm/core";
 import { Inject, Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
-import { Photo } from "../../../schema/entities/photo.entity";
+import { PhotoEntity } from "../../../schema/entities/photo.entity";
 import { ORM } from "../../orm/orm.module";
 import { InMemoryCacheService } from "./in-memory-cache.service";
 import { StorageService } from "./storage.service";
@@ -37,7 +37,7 @@ export class SchedulerService implements OnModuleInit {
       const jobStartDate = Date.now();
 
       const filesList = await this.storageService.getFilesListInBucket("photos");
-      const photosInUse: Photo[] = await this.orm.em.fork().find(Photo, {}, { fields: ["filename"] });
+      const photosInUse: PhotoEntity[] = await this.orm.em.fork().find(PhotoEntity, {}, { fields: ["filename"] });
       const photosInUseFilenames: string[] = photosInUse.map(p => p.filename);
       const photosInUseAllSizeFilenames: string[] = [
         ...photosInUseFilenames,
@@ -75,7 +75,7 @@ export class SchedulerService implements OnModuleInit {
       const em = this.orm.em.fork();
 
       const photosToRemove = await em.find(
-        Photo,
+        PhotoEntity,
         {
           $and: [
             {

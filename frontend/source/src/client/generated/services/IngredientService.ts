@@ -5,8 +5,8 @@
 import type { AddIngredientInput } from '../models/AddIngredientInput';
 import type { DeleteByUuidInput } from '../models/DeleteByUuidInput';
 import type { EditIngredientInput } from '../models/EditIngredientInput';
-import type { Ingredient } from '../models/Ingredient';
-import type { PaginatedIngredient } from '../models/PaginatedIngredient';
+import type { IngredientEntity } from '../models/IngredientEntity';
+import type { PaginatedIngredientEntity } from '../models/PaginatedIngredientEntity';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -18,13 +18,13 @@ export class IngredientService {
      * Get ingredient list
      * @param offset
      * @param limit
-     * @returns PaginatedIngredient
+     * @returns PaginatedIngredientEntity
      * @throws ApiError
      */
     public static ingredientControllerIngredientList(
         offset?: number,
         limit?: number,
-    ): CancelablePromise<PaginatedIngredient> {
+    ): CancelablePromise<PaginatedIngredientEntity> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/v1/ingredient',
@@ -38,12 +38,12 @@ export class IngredientService {
     /**
      * Add ingredient
      * @param requestBody
-     * @returns Ingredient
+     * @returns IngredientEntity
      * @throws ApiError
      */
     public static ingredientControllerIngredientAdd(
         requestBody: AddIngredientInput,
-    ): CancelablePromise<Ingredient> {
+    ): CancelablePromise<IngredientEntity> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/v1/ingredient',
@@ -72,12 +72,12 @@ export class IngredientService {
     /**
      * Delete ingredient
      * @param requestBody
-     * @returns Ingredient
+     * @returns IngredientEntity
      * @throws ApiError
      */
     public static ingredientControllerIngredientRemove(
         requestBody: DeleteByUuidInput,
-    ): CancelablePromise<Ingredient> {
+    ): CancelablePromise<IngredientEntity> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/v1/ingredient',
@@ -89,12 +89,12 @@ export class IngredientService {
     /**
      * Get ingredient details
      * @param id
-     * @returns Ingredient
+     * @returns IngredientEntity
      * @throws ApiError
      */
     public static ingredientControllerIngredientDetails(
         id: string,
-    ): CancelablePromise<Ingredient> {
+    ): CancelablePromise<IngredientEntity> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/v1/ingredient/{id}',

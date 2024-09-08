@@ -7,6 +7,7 @@ import { Ingredients } from "./ingredients.component";
 import { Login } from "./login.component";
 import { NotFound } from "./not-found.component";
 import { RequireAuth } from "./require-auth.component";
+import { Recipes } from "./recipes.component";
 
 const App: React.FC = () => {
     return (
@@ -14,11 +15,8 @@ const App: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<Dashboard />} />} />
             <Route path="/ingredients" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<Ingredients />} />} />
-            {/* <Route path="/works" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<WorkList />} />} />
-                <Route path="/works/:id" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<WorkEdit />} />} />
-                <Route path="/exhibitions" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<ExhibitionList />} />} />
-                <Route path="/exhibitions/:id" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<ExhibitionEdit />} />} />
-                <Route path="/user-settings" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<UserSettings />} />} /> */}
+            <Route path="/recipes" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<Recipes />} />} />
+            {/* <Route path="/works/:id" element={<RequireAuth requiredRoles={[UserRole.USER]} component={<WorkEdit />} />} /> */}
             <Route path="/404" element={<RequireAuth component={<NotFound />} />} />
             <Route path="*" element={<RequireAuth component={<NotFound />} />} />
         </Routes>

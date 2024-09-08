@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { UpdateUserInput } from '../models/UpdateUserInput';
-import type { User } from '../models/User';
+import type { UserEntity } from '../models/UserEntity';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -13,10 +13,10 @@ export class UserService {
 
     /**
      * Get user details
-     * @returns User
+     * @returns UserEntity
      * @throws ApiError
      */
-    public static userControllerUserDetails(): CancelablePromise<User> {
+    public static userControllerUserDetails(): CancelablePromise<UserEntity> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/v1/user/details',
@@ -26,12 +26,12 @@ export class UserService {
     /**
      * Update user
      * @param requestBody
-     * @returns User
+     * @returns UserEntity
      * @throws ApiError
      */
     public static userControllerUserUpdate(
         requestBody: UpdateUserInput,
-    ): CancelablePromise<User> {
+    ): CancelablePromise<UserEntity> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/v1/user/update',

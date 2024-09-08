@@ -10,6 +10,7 @@ import { OrmModule } from "../orm/orm.module";
 import { configFactory, configInstance } from "./app.config";
 import { AppController } from "./controllers/app.controller";
 import { IngredientController } from "./controllers/ingredient.controller";
+import { RecipeController } from "./controllers/recipe.controller";
 import { UserController } from "./controllers/user.controller";
 import { ExceptionFilter } from "./errors/filters/exception.filter";
 import { ReqResLogMiddleware } from "./middlewares/req-res-log.middleware";
@@ -44,7 +45,7 @@ export const moduleMetadata: ModuleMetadata = {
     AuthModule,
     OrmModule,
   ],
-  controllers: [AppController, IngredientController, UserController],
+  controllers: [AppController, IngredientController, RecipeController, UserController],
   providers: [
     StorageService,
     SchedulerService,

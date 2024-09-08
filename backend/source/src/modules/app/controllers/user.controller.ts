@@ -2,12 +2,12 @@ import { MikroORM } from "@mikro-orm/core";
 import { Body, Controller, Get, HttpStatus, Inject, NotFoundException, Patch } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import * as bcrypt from "bcrypt";
-import { User } from "../../../schema/entities/user.entity";
+import { UserEntity } from "../../../schema/entities/user.entity";
 import { IUser } from "../../../schema/interfaces/jwt";
 import { UserRole } from "../../../schema/interfaces/user-role";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { ORM } from "../../orm/orm.module";
-import { UpdateUserInput } from "../dto/user/input/update-user.input";
+import { UpdateUserInput } from "../dto/user/update-user.input";
 import { Roles } from "../decorators/roles.decorator";
 import { ApplyApiInternalServiceExceptionResponse } from "../decorators/apply-api-internal-service-exception-response.decorator";
 
@@ -24,11 +24,11 @@ export class UserController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: User,
+    type: UserEntity,
   })
   @Get("details")
-  async userDetails(@CurrentUser() user: IUser): Promise<User> {
-    const userEntity = await this.orm.em.findOne(User, { id: user.id });
+  async userDetails(@CurrentUser() user: IUser): Promise<UserEntity> {
+    const userEntity = await this.orm.em.findOne(UserEntity, { id: user.id });
     if (!userEntity) {
       throw new NotFoundException();
     }
@@ -42,11 +42,11 @@ export class UserController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: User,
+    type: UserEntity,
   })
   @Patch("update")
-  async userUpdate(@CurrentUser() user: IUser, @Body() input: UpdateUserInput): Promise<User> {
-    const userEntity = await this.orm.em.findOne(User, { id: user.id });
+  async userUpdate(@CurrentUser() user: IUser, @Body() input: UpdateUserInput): Promise<UserEntity> {
+    const userEntity = await this.orm.em.findOne(UserEntity, { id: user.id });
     if (!userEntity) {
       throw new NotFoundException();
     }

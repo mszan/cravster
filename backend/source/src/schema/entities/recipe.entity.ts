@@ -1,28 +1,38 @@
-import { Entity, ManyToOne, OneToOne, Property } from "@mikro-orm/core";
+import { Collection, Entity, OneToMany, OneToOne, Property, ManyToOne } from "@mikro-orm/core";
 import { ApiProperty } from "@nestjs/swagger";
-import { Base } from "./base.entity";
-import { Photo } from "./photo.entity";
-import { User } from "./user.entity";
+import { BaseEntity } from "./base.entity";
+import { PhotoEntity } from "./photo.entity";
+import { UserEntity } from "./user.entity";
+import { RecipeIngredientEntity } from "./recipe-ingredient.entity";
 
 @Entity()
-export class Recipe extends Base {
+export class RecipeEntity extends BaseEntity {
   @ApiProperty({ maxLength: 255, nullable: false })
   @Property({ length: 255, nullable: false })
   title!: string;
 
   @ApiProperty({ nullable: true, maxLength: 10000 })
   @Property({ nullable: true, length: 10000 })
-  description?: string;
+  description: string | null;
 
-  @ApiProperty({ type: () => Photo, isArray: false, nullable: true })
+  @ApiProperty({ nullable: false, type: () => RecipeIngredientEntity, isArray: true })
+  @OneToMany({
+    entity: () => RecipeIngredientEntity,
+    mappedBy: "recipe",
+    orphanRemoval: true,
+  })
+  recipeIngredients = new Collection<RecipeIngredientEntity>(this);
+
+  @ApiProperty({ type: () => PhotoEntity, isArray: false, nullable: true })
   @OneToOne({
-    entity: () => Photo,
-    mappedBy: (Photo: Photo) => Photo.recipe,
+    entity: () => PhotoEntity,
+    mappedBy: (Photo: PhotoEntity) => Photo.recipe,
     nullable: true,
     orphanRemoval: true,
   })
-  photo?: Photo;
+  photo?: PhotoEntity;
 
-  @ManyToOne({ entity: () => User, nullable: false })
-  user!: User;
+  @ApiProperty({ nullable: false, type: () => UserEntity })
+  @ManyToOne({ entity: () => UserEntity, nullable: false })
+  user!: UserEntity;
 }
