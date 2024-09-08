@@ -1,5 +1,5 @@
 import { AppstoreAddOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { Button, Col, Divider, Flex, Image, List, notification, Row, Typography } from "antd";
+import { Button, Col, Divider, Flex, Image, List, notification, Row, Tooltip, Typography } from "antd";
 import React, { useEffect } from "react";
 import { RecipeInList, RecipeService } from "../client/generated";
 import { configInstance } from "../config";
@@ -79,7 +79,7 @@ export const Recipes: React.FC<React.PropsWithChildren> = _props => {
                                 style={{
                                     display: "flex",
                                 }}
-                                key={item.title}
+                                key={item.id}
                                 extra={
                                     <Image
                                         style={{
@@ -135,7 +135,21 @@ export const Recipes: React.FC<React.PropsWithChildren> = _props => {
                                             marginBottom: 4,
                                         }}
                                     >
-                                        {item.ingredients.join(", ")}
+                                        <Tooltip title="Percentage of ingredients that are in storage. Helps you to understand if you can cook this recipe right now.">
+                                            {Math.round(
+                                                (item.ingredients.filter(i => i.isInStorage).length / item.ingredients.length) * 100,
+                                            )}
+                                            {"% | "}
+                                        </Tooltip>
+                                        {item.ingredients.map(i => (
+                                            <>
+                                                <span className={i.isInStorage ? "ingredient-in-storage" : "ingredient-not-in-storage"}>
+                                                    {i.amount} {i.unit.toLowerCase()}
+                                                    {i.amount > 1 ? "s" : ""} of {i.name}
+                                                </span>
+                                                <span>{item.ingredients.indexOf(i) === item.ingredients.length - 1 ? "" : ", "}</span>
+                                            </>
+                                        ))}
                                     </Typography.Text>
                                     <Typography.Text>{item.description ?? ""}</Typography.Text>
                                     <Flex gap={5} className="item-actions" style={{ marginTop: "auto" }}>

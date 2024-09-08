@@ -14,6 +14,19 @@ export class RecipeInList {
   @ApiProperty({ nullable: true, type: () => Photo })
   photo: Photo | null;
 
-  @ApiProperty({ nullable: false, type: () => String, isArray: true })
-  ingredients: string[];
+  @ApiProperty({
+    nullable: false,
+    type: "array",
+    items: {
+      type: "object",
+      required: ["isInStorage", "amount", "unit", "name"],
+      properties: {
+        isInStorage: { type: "boolean" },
+        amount: { type: "number" },
+        unit: { type: "string" },
+        name: { type: "string" },
+      },
+    },
+  })
+  ingredients: { isInStorage: boolean; amount: number; unit: string; name: string }[];
 }

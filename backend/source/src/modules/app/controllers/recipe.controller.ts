@@ -47,6 +47,10 @@ export class RecipeController {
     status: HttpStatus.OK,
     type: PaginatedRecipeInList,
   })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: NotFoundException,
+  })
   @ApiQuery({
     name: "offset",
     type: Number,
@@ -76,18 +80,39 @@ export class RecipeController {
       },
     );
 
-    const recipes: RecipeInList[] = recipesEntities.map(recipeEntity => ({
-      id: recipeEntity.id,
-      title: recipeEntity.title,
-      description: recipeEntity.description,
-      photo: recipeEntity.photo
-        ? {
-            filename: recipeEntity.photo?.filename,
-            path: recipeEntity.photo?.path,
-          }
-        : null,
-      ingredients: recipeEntity.recipeIngredients.map(ri => ri.ingredient.name),
-    }));
+    const userEntity = await this.orm.em.findOne(
+      UserEntity,
+      { id: user.id },
+      { populate: ["ingredients"], fields: ["ingredients"] },
+    );
+
+    if (!userEntity) {
+      throw new NotFoundException();
+    }
+
+    const recipes: RecipeInList[] = [];
+    for (const recipeEntity of recipesEntities) {
+      const ingredients: { isInStorage: boolean; amount: number; unit: string; name: string }[] =
+        recipeEntity.recipeIngredients.map(ri => {
+          const userIngredient = userEntity.ingredients.find(i => i.id === ri.ingredient.id);
+          const isInStorage = (userIngredient && ri.amount <= userIngredient.storageAmount) || false;
+          return { isInStorage, amount: ri.amount, unit: ri.ingredient.unit, name: ri.ingredient.name };
+        });
+
+      recipes.push({
+        id: recipeEntity.id,
+        title: recipeEntity.title,
+        description: recipeEntity.description,
+        photo: recipeEntity.photo
+          ? {
+              filename: recipeEntity.photo?.filename,
+              path: recipeEntity.photo?.path,
+            }
+          : null,
+        ingredients,
+      });
+    }
+
     // Using QB to avoid big call stack and thus improve performance.
     const qb = this.orm.em.createQueryBuilder(RecipeEntity);
     const recipesTotal = await qb.count();

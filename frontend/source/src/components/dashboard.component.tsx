@@ -44,8 +44,8 @@ export const Dashboard: React.FC<Props> = () => {
                 <Col span={12}>
                     <Statistic title="Ingredients amount" value={12345} precision={2} formatter={formatter} />
                 </Col>
-                {Array.from({ length: 10 }, (v, i) => i).map(_i => (
-                    <Col span={24}>
+                {Array.from({ length: 10 }, (v, i) => i).map(i => (
+                    <Col span={24} key={i}>
                         <Skeleton />
                     </Col>
                 ))}

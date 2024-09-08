@@ -10,6 +10,11 @@ export type RecipeInList = {
     title: string;
     description: string | null;
     photo: Photo | null;
-    ingredients: Array<string>;
+    ingredients: Array<{
+        isInStorage: boolean;
+        amount: number;
+        unit: string;
+        name: string;
+    }>;
 };
 

@@ -51,6 +51,19 @@ body {
             .item-actions {
                 opacity: 1;
             }
+
+            .ingredient-in-storage,
+            .ingredient-not-in-storage {
+                transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+            }
+
+            .ingredient-in-storage {
+                color: rgb(69, 177, 50);
+            }
+
+            .ingredient-not-in-storage {
+                color: rgb(255, 62, 62);
+            }
         }
     }
 }

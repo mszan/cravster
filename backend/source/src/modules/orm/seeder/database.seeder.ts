@@ -90,8 +90,8 @@ export class DatabaseSeeder extends Seeder {
       ingredient.name = faker.food.ingredient();
       ingredient.category = _.sample(Object.keys(IngredientCategory)) as IngredientCategory;
       ingredient.unit = _.sample(Object.keys(IngredientUnit)) as IngredientUnit;
-      ingredient.storageAmount = faker.number.int({ min: 0, max: 100 });
-      ingredient.shoppingAmount = faker.number.int({ min: 0, max: 100 });
+      ingredient.storageAmount = faker.number.int({ min: 0, max: 700 });
+      ingredient.shoppingAmount = faker.number.int({ min: 0, max: 700 });
       ingredient.user = userImUser;
       ingredients.push(ingredient);
     }

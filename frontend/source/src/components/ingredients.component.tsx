@@ -220,7 +220,7 @@ const EditableContext = React.createContext<FormInstance<any> | null>(null);
 const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
     const [form] = Form.useForm();
     return (
-        <Form form={form} component={false}>
+        <Form form={form} component={false} key={index}>
             <EditableContext.Provider value={form}>
                 <tr {...props} />
             </EditableContext.Provider>
@@ -286,7 +286,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = props
         );
     }
 
-    return <td>{childNode}</td>;
+    return <td key={props.dataIndex}>{childNode}</td>;
 };
 
 const AddIngredientDrawer: React.FC<React.PropsWithChildren<AddIngredientDrawerProps>> = props => {
@@ -574,6 +574,7 @@ export const Ingredients: React.FC<React.PropsWithChildren> = _props => {
             return col;
         }
         return {
+            key: col.dataIndex,
             ...col,
             onCell: (record: IngredientDataType) => ({
                 record,
